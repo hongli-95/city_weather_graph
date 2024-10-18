@@ -262,7 +262,10 @@ export default function Home() {
 				<div>Weather App</div>
 				<div className="flex flex-row gap-4 items-center justify-center">
 					<ThemeToggler />
-					<a href="#" target="_blank">
+					<a
+						href="https://github.com/hongli-95/city_weather_graph"
+						target="_blank"
+					>
 						<Button className="dark:bg-white rounded-md font-semibold">
 							Github
 						</Button>
