@@ -51,7 +51,6 @@ export default function Home() {
 	const [searchInput, setSearchInput] = useState("");
 	const [searchResult, setSearchResult] = useState([]);
 	const [isSearching, setIsSearching] = useState(false); // for searching city
-	const [errorMsg, setErrorMsg] = useState("");
 	const [activeCard, setActiveCard] = useState<null | number>(null);
 
 	const [dailyForecast, setDailyForecast] = useState<object[]>([]);
@@ -97,8 +96,6 @@ export default function Home() {
 			searchHourlyForecast(lat, lon, timezone);
 			searchDailyForecast(lat, lon, timezone);
 		}
-		// console.log(lat, lon, timezone);
-		// searchDailyForecast(lat, lon, timezone);
 	};
 
 	const searchCurrentWeather = async (
@@ -245,7 +242,7 @@ export default function Home() {
 				})
 				.then(() => setIsSearching(false))
 				.catch((error) => {
-					setErrorMsg(error);
+					console.log(error);
 				});
 		}
 
@@ -278,9 +275,8 @@ export default function Home() {
 			</div>
 
 			<div className="flex flex-row flex-wrap justify-center items-center gap-4 p-4">
-				{isSearching ? (
-					<Loader2 className="animate-spin" size={36} />
-				) : searchResult.length ? (
+				{isSearching ? <Loader2 className="animate-spin" size={36} /> : null}
+				{searchResult ? (
 					searchResult.map((city, index) => (
 						<CityCard
 							key={index}
@@ -298,8 +294,9 @@ export default function Home() {
 							}
 						/>
 					))
+				) : !searchResult && searchInput ? (
+					<div>No city found.</div>
 				) : null}
-				{errorMsg && <div>{errorMsg}</div>}
 			</div>
 
 			{currentCity.latitude !== 0 &&
