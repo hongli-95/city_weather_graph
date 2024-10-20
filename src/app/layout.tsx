@@ -14,7 +14,11 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="en" suppressHydrationWarning>
-			<body className={`antialiased`}>
+			<body
+				className={`antialiased text-black bg-cyan-300
+							 dark:text-white dark:bg-slate-700
+								`}
+			>
 				<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
 					{children}
 				</ThemeProvider>

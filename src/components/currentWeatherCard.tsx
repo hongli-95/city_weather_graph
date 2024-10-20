@@ -20,13 +20,23 @@ export default function CurrentWeatherCard({
 	windSpeed,
 	isCelsius,
 }: CurrentWeatherCardPropsType) {
+	const now = new Date().toLocaleDateString(undefined, {
+		weekday: "long",
+		year: "numeric",
+		month: "short",
+		day: "numeric",
+	});
+
 	return (
 		<div
-			className="flex flex-row justify-center items-center p-4 gap-4 bg-blue-500 text-white
-                        dark:bg-slate-300 dark:bg-opacity-50 rounded-md"
+			className="flex flex-col justify-center items-center p-4 px-8 gap-4 text-black backdrop-blur-md bg-white/40
+                        dark:bg-slate-300 dark:bg-opacity-50 rounded-md dark:text-white"
 		>
 			<div className="flex flex-col gap-2">
-				<div>
+				<div className="font-semibold text-xl">
+					<p>{now}</p>
+				</div>
+				<div className="flex flex-row justify-center items-center">
 					<Image
 						alt="weather icon"
 						width={80}
@@ -39,22 +49,23 @@ export default function CurrentWeatherCard({
 										.night.image
 						}
 					></Image>
-					<p>
-						{isDay
-							? weatherCode[`${weatherCodeNum}` as keyof typeof weatherCode].day
-									.description
-							: weatherCode[`${weatherCodeNum}` as keyof typeof weatherCode]
-									.night.description}
-					</p>
+					<div>
+						<p className="font-semibold text-xl">
+							{isDay
+								? weatherCode[`${weatherCodeNum}` as keyof typeof weatherCode]
+										.day.description
+								: weatherCode[`${weatherCodeNum}` as keyof typeof weatherCode]
+										.night.description}
+						</p>
+						<p>
+							<span className="font-semibold text-xl">
+								{temperature} {isCelsius ? "°C" : "°F"}
+							</span>
+						</p>
+					</div>
 				</div>
 			</div>
 			<div className="flex flex-col gap-2">
-				<p>
-					Temperature:{" "}
-					<span className="font-semibold">
-						{temperature} {isCelsius ? "°C" : "°F"}
-					</span>
-				</p>
 				<p>
 					Precipitation:{" "}
 					<span className="font-semibold">{precipitation} %</span>

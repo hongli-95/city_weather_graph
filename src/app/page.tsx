@@ -56,7 +56,7 @@ export default function Home() {
 	const [dailyForecast, setDailyForecast] = useState<object[]>([]);
 	const [hourlyForecast, setHourlyForecast] = useState<object[]>([]);
 	const [currentWeather, setCurrentWeather] = useState<CurrentWeatherType>({
-		is_day: 0,
+		is_day: -1,
 		temperature_2m: 0,
 		precipitation: 0,
 		relative_humidity_2m: 0,
@@ -78,7 +78,12 @@ export default function Home() {
 
 	// save search term
 	const handleInput = (event: React.FormEvent<HTMLInputElement>) => {
-		setSearchInput(event?.currentTarget?.value);
+		if (
+			event?.currentTarget?.value === "" ||
+			/^[^0-9]*$/.test(event?.currentTarget?.value)
+		) {
+			setSearchInput(event?.currentTarget?.value);
+		}
 	};
 
 	// show hourly first
@@ -89,8 +94,8 @@ export default function Home() {
 		timezone: string
 	) => {
 		if (activeCard === null || activeCard !== index) {
-			setActiveCard(index);
 			setCurrentTab("hourly");
+			setActiveCard(index);
 			setCurrentCity({ latitude: lat, longitude: lon, timezone: timezone });
 			searchCurrentWeather(lat, lon, timezone);
 			searchHourlyForecast(lat, lon, timezone);
@@ -234,11 +239,22 @@ export default function Home() {
 		// search city
 		async function searchCities() {
 			setIsSearching(true);
+			setSearchResult([]);
 			await axios(
 				`https://geocoding-api.open-meteo.com/v1/search?name=${query}&count=5&language=en&format=json`
 			)
 				.then((res) => {
 					setSearchResult(res.data.results);
+					setActiveCard(null);
+					setCurrentCity({ latitude: 0, longitude: 0, timezone: "timezone" });
+					setCurrentWeather({
+						is_day: 0,
+						temperature_2m: 0,
+						precipitation: 0,
+						relative_humidity_2m: 0,
+						weather_code: 0,
+						wind_speed_10m: 0,
+					});
 				})
 				.then(() => setIsSearching(false))
 				.catch((error) => {
@@ -250,6 +266,21 @@ export default function Home() {
 			searchCities();
 		} else {
 			setSearchResult([]);
+			setHourlyForecast([]);
+			setDailyForecast([]);
+			setCurrentCity({
+				latitude: 0,
+				longitude: 0,
+				timezone: "",
+			});
+			setCurrentWeather({
+				is_day: -1,
+				temperature_2m: 0,
+				precipitation: 0,
+				relative_humidity_2m: 0,
+				weather_code: 0,
+				wind_speed_10m: 0,
+			});
 		}
 	}, [query]);
 
@@ -263,7 +294,7 @@ export default function Home() {
 						href="https://github.com/hongli-95/city_weather_graph"
 						target="_blank"
 					>
-						<Button className="dark:bg-white rounded-md font-semibold">
+						<Button className="bg-green-500 rounded-md font-semibold">
 							Github
 						</Button>
 					</a>
@@ -303,7 +334,7 @@ export default function Home() {
 			currentCity.longitude !== 0 &&
 			currentCity.timezone &&
 			!isLoading ? (
-				<div className="flex flex-col gap-5">
+				<div className="flex flex-col gap-5 ">
 					<Select
 						onValueChange={(val) => {
 							if (val === "celsius") {
@@ -362,15 +393,17 @@ export default function Home() {
 							</SelectGroup>
 						</SelectContent>
 					</Select>
-					<CurrentWeatherCard
-						isDay={currentWeather.is_day ? true : false}
-						temperature={currentWeather.temperature_2m}
-						precipitation={currentWeather.precipitation}
-						relativeHumidity={currentWeather.relative_humidity_2m}
-						weatherCodeNum={currentWeather.weather_code}
-						windSpeed={currentWeather.wind_speed_10m}
-						isCelsius={isCelsius}
-					/>
+					{currentWeather.is_day !== -1 ? (
+						<CurrentWeatherCard
+							isDay={currentWeather.is_day ? true : false}
+							temperature={currentWeather.temperature_2m}
+							precipitation={currentWeather.precipitation}
+							relativeHumidity={currentWeather.relative_humidity_2m}
+							weatherCodeNum={currentWeather.weather_code}
+							windSpeed={currentWeather.wind_speed_10m}
+							isCelsius={isCelsius}
+						/>
+					) : null}
 				</div>
 			) : isLoading ? (
 				<Loader2 className="animate-spin" />
@@ -380,14 +413,18 @@ export default function Home() {
 			{hourlyForecast.length && !isLoading ? (
 				<Tabs
 					defaultValue={currentTab}
-					className="md:w-[80%] flex flex-col items-center"
+					className="w-[100%] md:w-[80%] flex flex-col items-center rounded-md gap-4 p-2 backdrop-blur-md bg-white/20"
 					onValueChange={(val) => {
 						setCurrentTab(val);
 					}}
 				>
-					<TabsList className="grid w-1/3 grid-cols-2 relative mb-4">
-						<TabsTrigger value="hourly">2-Day Hourly Forecast</TabsTrigger>
-						<TabsTrigger value="daily">7-Day Daily Forecast</TabsTrigger>
+					<TabsList className="grid w-[80%] md:w-[50%] grid-cols-2 relative mb-4 backdrop-blur-md bg-white/40">
+						<TabsTrigger value="hourly" className="text-black dark:text-white">
+							2-Day Hourly Forecast
+						</TabsTrigger>
+						<TabsTrigger value="daily" className="text-black dark:text-white">
+							7-Day Daily Forecast
+						</TabsTrigger>
 					</TabsList>
 
 					<TabsContent value="hourly" className="w-full">
@@ -397,22 +434,26 @@ export default function Home() {
 							<ResponsiveContainer width="100%" height="100%">
 								<LineChart width={500} height={300} data={hourlyForecast}>
 									<CartesianGrid strokeDasharray="3 3" />
-									<XAxis dataKey="time" name="time" />
+									<XAxis dataKey="time" name="time" stroke="black" />
 									<YAxis
+										stroke="black"
 										yAxisId="left"
 										label={{
 											value: "Temperature",
 											angle: -90,
 											position: "insideLeft",
+											fill: "black",
 										}}
 									/>
 									<YAxis
+										stroke="black"
 										yAxisId="right"
 										orientation="right"
 										label={{
 											value: "Precipitation %",
 											angle: 90,
 											position: "insideRight",
+											fill: "black",
 										}}
 									/>
 									<Tooltip content={<CustomTooltipHourly />} />
@@ -431,7 +472,7 @@ export default function Home() {
 										dataKey="precipitation_probability"
 										yAxisId="right"
 										name="Precipitation"
-										stroke="#73CCD8"
+										stroke="#6495ED"
 										unit="%"
 										activeDot={{ r: 2 }}
 									/>
@@ -448,22 +489,26 @@ export default function Home() {
 							<ResponsiveContainer width="100%" height="100%">
 								<LineChart width={500} height={300} data={dailyForecast}>
 									<CartesianGrid strokeDasharray="3 3" />
-									<XAxis dataKey="time" name="time" />
+									<XAxis dataKey="time" name="time" stroke="black" />
 									<YAxis
+										stroke="black"
 										yAxisId="left"
 										label={{
 											value: "Temperature",
 											angle: -90,
 											position: "insideLeft",
+											fill: "black",
 										}}
 									/>
 									<YAxis
+										stroke="black"
 										yAxisId="right"
 										orientation="right"
 										label={{
 											value: "Precipitation",
 											angle: 90,
 											position: "insideRight",
+											fill: "black",
 										}}
 									/>
 
@@ -483,7 +528,7 @@ export default function Home() {
 										dataKey="temperature_2m_min"
 										yAxisId="left"
 										name="Low"
-										stroke="#4169E1"
+										stroke="#FFFFFF"
 										unit={isCelsius ? "°C" : "°F"}
 										activeDot={{ r: 2 }}
 									/>
@@ -492,7 +537,7 @@ export default function Home() {
 										dataKey="precipitation_probability_max"
 										yAxisId="right"
 										name="precipitation"
-										stroke="#73CCD8"
+										stroke="#6495ED"
 										unit="%"
 										activeDot={{ r: 2 }}
 									/>
